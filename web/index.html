@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Remembrance Dialer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0a0a; --surface: #1a1a1a; --surface2: #252525;
+  --text: #f0f0f0; --text2: #888; --text3: #555;
+  --blue: #3b82f6; --green: #22c55e; --orange: #f97316;
+  --yellow: #eab308; --red: #ef4444;
+  --radius: 12px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100dvh; max-width: 480px; margin: 0 auto;
+  padding: 0 16px 100px;
+  -webkit-tap-highlight-color: transparent;
+}
+header { padding: 20px 0 12px; display: flex; align-items: center; justify-content: space-between; }
+header h1 { font-size: 22px; font-weight: 700; }
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: var(--surface); color: var(--text); font-size: 18px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.icon-btn:active { background: var(--surface2); }
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.progress-bar { width: 100%; height: 6px; background: var(--surface2); border-radius: 3px; margin: 8px 0; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .3s; background: var(--blue); }
+.current-card { border: 2px solid var(--blue); }
+.current-card.calling { border-color: var(--orange); }
+.current-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.current-name { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.current-number { font-size: 15px; color: var(--text2); }
+.status-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.badge-pending { background: #333; color: var(--text2); }
+.badge-calling { background: rgba(249,115,22,.15); color: var(--orange); }
+.badge-called { background: rgba(34,197,94,.15); color: var(--green); }
+.badge-skipped { background: rgba(234,179,8,.15); color: var(--yellow); }
+.badge-failed { background: rgba(239,68,68,.15); color: var(--red); }
+.notes-input { width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; background: var(--surface2); border: 1px solid #333; color: var(--text); font-size: 14px; font-family: inherit; resize: none; height: 50px; }
+.notes-input::placeholder { color: var(--text3); }
+.actions { display: flex; gap: 8px; margin-bottom: 12px; }
+.btn { flex: 1; padding: 14px 12px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--blue); color: white; }
+.btn-secondary { background: var(--surface); color: var(--text); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+.countdown { text-align: center; font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+.entry-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #222; }
+.entry-row:last-child { border-bottom: none; }
+.entry-icon { width: 22px; text-align: center; font-size: 14px; flex-shrink: 0; }
+.entry-info { flex: 1; min-width: 0; }
+.entry-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry-num { font-size: 12px; color: var(--text2); }
+.entry-time { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.section-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+#load-screen { display: none; }
+.segment { display: flex; gap: 4px; margin-bottom: 12px; }
+.seg-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; background: var(--surface); color: var(--text2); font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+.seg-btn.active { background: var(--blue); color: white; }
+.input-area { width: 100%; padding: 10px; border-radius: 8px; background: var(--surface2); border: 1px solid #333; color: var(--text); font-size: 14px; font-family: monospace; resize: none; min-height: 180px; }
+.input-area::placeholder { color: var(--text3); }
+.text-input { width: 100%; padding: 10px; border-radius: 8px; background: var(--surface2); border: 1px solid #333; color: var(--text); font-size: 14px; font-family: inherit; margin-bottom: 8px; }
+.text-input::placeholder { color: var(--text3); }
+.file-drop { border: 2px dashed #333; border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; }
+.file-drop p { color: var(--text2); font-size: 14px; margin-top: 8px; }
+.parsed-count { font-size: 13px; color: var(--green); margin-top: 8px; }
+.session-item { cursor: pointer; transition: background .15s; }
+.session-item:active { background: var(--surface2); border-radius: var(--radius); }
+.session-name { font-size: 16px; font-weight: 600; }
+.session-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+#settings-screen { display: none; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #222; }
+.setting-label { font-size: 15px; }
+.setting-value { font-size: 14px; color: var(--text2); }
+input[type="range"] { -webkit-appearance: none; width: 120px; height: 4px; background: var(--surface2); border-radius: 2px; outline: none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); cursor: pointer; }
+.toggle { width: 48px; height: 28px; border-radius: 14px; border: none; background: #444; cursor: pointer; position: relative; transition: background .2s; }
+.toggle.on { background: var(--green); }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: white; transition: transform .2s; }
+.toggle.on::after { transform: translateX(20px); }
+.complete-banner { text-align: center; padding: 24px; background: rgba(34,197,94,.08); border-radius: var(--radius); }
+.complete-banner .icon { font-size: 32px; color: var(--green); }
+.complete-banner h3 { color: var(--green); margin: 8px 0 4px; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: .4; }
+.empty-state h3 { margin-bottom: 8px; }
+.empty-state p { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid #222; display: flex; max-width: 480px; margin: 0 auto; padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 100; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; border: none; background: none; color: var(--text3); font-size: 10px; cursor: pointer; }
+.nav-btn.active { color: var(--blue); }
+.nav-btn .nav-icon { font-size: 20px; }
+</style>
+</head>
+<body>
+<div id="sessions-screen">
+  <header><h1>Remembrance Dialer</h1><div class="header-actions"><button class="icon-btn" onclick="showLoadScreen()" title="New Session">+</button></div></header>
+  <div id="session-list"></div>
+</div>
+<div id="load-screen">
+  <header><button class="icon-btn" onclick="hideLoadScreen()">&#8592;</button><h1>Load Numbers</h1><button class="btn btn-primary" style="flex:0;padding:8px 16px;font-size:13px;" onclick="createSessionFromLoad()">Create</button></header>
+  <input type="text" class="text-input" id="session-name-input" placeholder="Session name" value="New Session">
+  <div class="segment"><button class="seg-btn active" onclick="switchLoadTab(0,this)">Paste</button><button class="seg-btn" onclick="switchLoadTab(1,this)">Manual</button><button class="seg-btn" onclick="switchLoadTab(2,this)">Import</button></div>
+  <div id="load-tab-0"><textarea class="input-area" id="paste-area" placeholder="Paste numbers here, one per line"></textarea><div class="parsed-count" id="paste-count"></div></div>
+  <div id="load-tab-1" style="display:none"><input type="tel" class="text-input" id="manual-number" placeholder="Phone number"><input type="text" class="text-input" id="manual-label" placeholder="Label (optional)"><button class="btn btn-secondary" style="margin-bottom:12px" onclick="addManualEntry()">Add to List</button><div id="manual-list"></div></div>
+  <div id="load-tab-2" style="display:none"><div class="file-drop" onclick="document.getElementById('file-input').click()"><div style="font-size:36px;opacity:.4">&#128196;</div><p>Tap to import .txt, .csv, or .json</p><input type="file" id="file-input" accept=".txt,.csv,.json" style="display:none" onchange="handleFileImport(event)"></div><div class="parsed-count" id="import-count"></div></div>
+</div>
+<div id="detail-screen" style="display:none">
+  <header><button class="icon-btn" onclick="showSessionsScreen()">&#8592;</button><h1 id="detail-title">Session</h1><button class="icon-btn" onclick="exportCSV()" title="Export CSV">&#8599;</button></header>
+  <div id="detail-content"></div>
+</div>
+<div id="settings-screen">
+  <header><h1>Settings</h1></header>
+  <div class="card">
+    <div class="setting-row"><span class="setting-label">Auto-advance</span><button class="toggle on" id="toggle-auto" onclick="toggleSetting('autoAdvance',this)"></button></div>
+    <div class="setting-row"><span class="setting-label">Delay</span><div style="display:flex;align-items:center;gap:8px"><span class="setting-value" id="delay-value">3s</span><input type="range" min="0" max="15" step="1" value="3" id="delay-slider" oninput="updateDelay(this.value)"></div></div>
+    <div class="setting-row"><span class="setting-label">Vibrate on return</span><button class="toggle on" id="toggle-haptic" onclick="toggleSetting('haptic',this)"></button></div>
+  </div>
+  <div class="card"><div class="section-title">How It Works</div><ol style="padding-left:18px;font-size:13px;color:var(--text2);line-height:1.8"><li>Create a session and load numbers</li><li>Tap Call for each number</li><li>After the call, come back and the next number is ready</li><li>Add notes, skip, or pause anytime</li><li>Export results as CSV</li></ol></div>
+</div>
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-sessions" onclick="navigate('sessions')"><span class="nav-icon">&#9742;</span>Sessions</button>
+  <button class="nav-btn" id="nav-settings" onclick="navigate('settings')"><span class="nav-icon">&#9881;</span>Settings</button>
+</nav>
+<script>
+let sessions=JSON.parse(localStorage.getItem('rd_sessions')||'[]'),settings=JSON.parse(localStorage.getItem('rd_settings')||'{"autoAdvance":true,"delay":3,"haptic":true}'),activeSessionId=null,countdownTimer=null,manualEntries=[],importedEntries=[];
+function save(){localStorage.setItem('rd_sessions',JSON.stringify(sessions))}
+function saveSettings(){localStorage.setItem('rd_settings',JSON.stringify(settings))}
+function getSession(id){return sessions.find(s=>s.id===id)}
+function navigate(screen){document.getElementById('sessions-screen').style.display=screen==='sessions'?'block':'none';document.getElementById('settings-screen').style.display=screen==='settings'?'block':'none';document.getElementById('detail-screen').style.display=screen==='detail'?'block':'none';document.getElementById('load-screen').style.display='none';document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));if(screen==='sessions')document.getElementById('nav-sessions').classList.add('active');if(screen==='settings')document.getElementById('nav-settings').classList.add('active');if(screen==='sessions')renderSessionList();if(screen==='detail')renderDetail()}
+function showLoadScreen(){document.getElementById('sessions-screen').style.display='none';document.getElementById('load-screen').style.display='block';document.getElementById('paste-area').value='';document.getElementById('paste-count').textContent='';document.getElementById('session-name-input').value='New Session';manualEntries=[];importedEntries=[];renderManualList();document.getElementById('import-count').textContent=''}
+function hideLoadScreen(){navigate('sessions')}
+function showSessionsScreen(){clearInterval(countdownTimer);activeSessionId=null;navigate('sessions')}
+function parseNumbers(text){return text.split(/[\n,]+/).map(l=>l.trim()).filter(Boolean).map(line=>{const parts=line.split('\t');const raw=parts[0].trim();const label=parts[1]?.trim()||'';const dialable=raw.replace(/[^0-9+]/g,'');if(!dialable||dialable.replace(/\+/g,'').length<3)return null;return{raw,label,dialable,status:'pending',calledAt:null,notes:''}}).filter(Boolean)}
+function parseCSV(text){return text.split('\n').slice(1).map(l=>{const cols=l.split(',');const raw=(cols[0]||'').trim();const label=(cols[1]||'').trim();const dialable=raw.replace(/[^0-9+]/g,'');if(!dialable||dialable.replace(/\+/g,'').length<3)return null;return{raw,label,dialable,status:'pending',calledAt:null,notes:''}}).filter(Boolean)}
+function parseJSON(text){try{return JSON.parse(text).map(item=>{const raw=(item.number||item.phone||'').trim();const label=(item.label||item.name||'').trim();const dialable=raw.replace(/[^0-9+]/g,'');if(!dialable||dialable.replace(/\+/g,'').length<3)return null;return{raw,label,dialable,status:'pending',calledAt:null,notes:''}}).filter(Boolean)}catch{return[]}}
+function switchLoadTab(idx,btn){[0,1,2].forEach(i=>document.getElementById('load-tab-'+i).style.display=i===idx?'block':'none');document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+document.getElementById('paste-area').addEventListener('input',function(){const e=parseNumbers(this.value);document.getElementById('paste-count').textContent=e.length?e.length+' number'+(e.length===1?'':'s')+' found':''});
+function addManualEntry(){const num=document.getElementById('manual-number').value.trim();const label=document.getElementById('manual-label').value.trim();if(!num)return;const dialable=num.replace(/[^0-9+]/g,'');if(!dialable)return;manualEntries.push({raw:num,label,dialable,status:'pending',calledAt:null,notes:''});document.getElementById('manual-number').value='';document.getElementById('manual-label').value='';renderManualList()}
+function renderManualList(){const el=document.getElementById('manual-list');if(!manualEntries.length){el.innerHTML='';return}el.innerHTML='<div class="section-title">Numbers ('+manualEntries.length+')</div>'+manualEntries.map((e,i)=>'<div class="entry-row"><span class="entry-icon" style="color:var(--text3)">&#9675;</span><div class="entry-info"><div class="entry-name">'+(e.label||e.raw)+'</div>'+(e.label?'<div class="entry-num">'+e.raw+'</div>':'')+'</div><button class="icon-btn" style="width:28px;height:28px;font-size:14px" onclick="manualEntries.splice('+i+',1);renderManualList()">&#10005;</button></div>').join('')}
+function handleFileImport(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){const text=e.target.result;const ext=file.name.split('.').pop().toLowerCase();if(ext==='csv')importedEntries=parseCSV(text);else if(ext==='json')importedEntries=parseJSON(text);else importedEntries=parseNumbers(text);document.getElementById('import-count').textContent=importedEntries.length+' numbers loaded from '+file.name};reader.readAsText(file)}
+function createSessionFromLoad(){const name=document.getElementById('session-name-input').value.trim()||'Session '+new Date().toLocaleDateString();const tab=document.querySelector('.seg-btn.active').textContent;let entries=[];if(tab==='Paste')entries=parseNumbers(document.getElementById('paste-area').value);else if(tab==='Manual')entries=[...manualEntries];else entries=[...importedEntries];if(!entries.length){alert('No valid numbers');return}const session={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,entries,currentIndex:0,isActive:false,createdAt:new Date().toISOString()};sessions.push(session);save();activeSessionId=session.id;navigate('detail')}
+function renderSessionList(){const el=document.getElementById('session-list');if(!sessions.length){el.innerHTML='<div class="empty-state"><div class="icon">&#9742;</div><h3>No sessions yet</h3><p>Create a session to start dialing numbers one by one.</p><button class="btn btn-primary" style="display:inline-flex" onclick="showLoadScreen()">New Session</button></div>';return}el.innerHTML=sessions.map(s=>{const done=s.entries.filter(e=>e.status!=='pending').length;const pct=s.entries.length?(done/s.entries.length*100):0;return'<div class="card session-item" onclick="activeSessionId=\''+s.id+'\';navigate(\'detail\')"><div class="session-name">'+esc(s.name)+'</div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+(pct>=100?'var(--green)':'var(--blue)')+'"></div></div><div class="session-meta">'+done+' / '+s.entries.length+' calls &middot; '+new Date(s.createdAt).toLocaleDateString()+'</div></div>'}).join('')}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function entryRow(e){const icons={pending:'&#9675;',calling:'&#9742;',called:'&#10004;',skipped:'&#9654;',failed:'&#10008;'};const colors={pending:'var(--text3)',calling:'var(--orange)',called:'var(--green)',skipped:'var(--yellow)',failed:'var(--red)'};const time=e.calledAt?new Date(e.calledAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';return'<div class="entry-row"><span class="entry-icon" style="color:'+colors[e.status]+'">'+icons[e.status]+'</span><div class="entry-info"><div class="entry-name">'+esc(e.label||e.raw)+'</div>'+(e.label?'<div class="entry-num">'+esc(e.raw)+'</div>':'')+(e.notes?'<div class="entry-num">'+esc(e.notes)+'</div>':'')+'</div><span class="entry-time">'+time+'</span></div>'}
+function renderDetail(){const s=getSession(activeSessionId);if(!s)return;document.getElementById('detail-title').textContent=s.name;const done=s.entries.filter(e=>e.status!=='pending').length;const pct=s.entries.length?(done/s.entries.length*100):0;const entry=s.entries[s.currentIndex];const allDone=s.entries.every(e=>e.status!=='pending');const upcoming=s.entries.slice(s.currentIndex+1).filter(e=>e.status==='pending').slice(0,5);const completed=s.entries.filter(e=>e.status!=='pending');let html='<div class="card"><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2)"><span>Progress</span><span style="font-weight:600;color:var(--text)">'+done+' / '+s.entries.length+'</span></div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%;background:'+(allDone?'var(--green)':'var(--blue)')+'"></div></div></div>';if(allDone){html+='<div class="complete-banner"><div class="icon">&#10004;</div><h3>All done!</h3><p style="color:var(--text2);font-size:13px">'+done+' calls completed</p></div>'}else if(entry){html+='<div class="card current-card'+(entry.status==='calling'?' calling':'')+'"><div class="current-label">&#9742; Current</div><div style="display:flex;justify-content:space-between;align-items:start"><div><div class="current-name">'+esc(entry.label||entry.raw)+'</div>'+(entry.label?'<div class="current-number">'+esc(entry.raw)+'</div>':'')+'</div><span class="status-badge badge-'+entry.status+'">'+entry.status+'</span></div><textarea class="notes-input" placeholder="Add notes after call..." oninput="saveNote(this.value)">'+esc(entry.notes)+'</textarea></div><div id="countdown-display" class="countdown"></div><div class="actions"><button class="btn btn-primary" onclick="dialCurrent()">&#9742; Call</button><button class="btn btn-secondary" onclick="skipCurrent()">Skip &#9654;</button></div>'}if(upcoming.length){html+='<div class="card"><div class="section-title">Up Next</div>'+upcoming.map(e=>entryRow(e)).join('');const rem=s.entries.filter(e=>e.status==='pending').length-upcoming.length-1;if(rem>0)html+='<div style="font-size:12px;color:var(--text3);padding:6px 0">+ '+rem+' more</div>';html+='</div>'}if(completed.length){html+='<div class="card"><div class="section-title">Completed</div>'+[...completed].reverse().map(e=>entryRow(e)).join('')+'</div>'}document.getElementById('detail-content').innerHTML=html}
+function dialCurrent(){const s=getSession(activeSessionId);if(!s)return;const entry=s.entries[s.currentIndex];if(!entry||entry.status==='called'||entry.status==='skipped')return;entry.status='calling';save();renderDetail();window.location.href='tel:'+entry.dialable;const handler=()=>{if(document.visibilityState==='visible'){document.removeEventListener('visibilitychange',handler);entry.status='called';entry.calledAt=new Date().toISOString();save();if(settings.haptic&&navigator.vibrate)navigator.vibrate(100);advanceToNext()}};setTimeout(()=>document.addEventListener('visibilitychange',handler),500)}
+function advanceToNext(){const s=getSession(activeSessionId);if(!s)return;const nextIdx=s.entries.findIndex((e,i)=>i>s.currentIndex&&e.status==='pending');if(nextIdx===-1){const any=s.entries.findIndex(e=>e.status==='pending');if(any===-1){s.currentIndex=s.entries.length;save();renderDetail();return}s.currentIndex=any}else{s.currentIndex=nextIdx}save();if(settings.autoAdvance&&settings.delay>0){let remaining=settings.delay;renderDetail();const cd=document.getElementById('countdown-display');if(cd)cd.textContent='Next call in '+remaining+'...';countdownTimer=setInterval(()=>{remaining--;const cd2=document.getElementById('countdown-display');if(remaining<=0){clearInterval(countdownTimer);dialCurrent()}else if(cd2){cd2.textContent='Next call in '+remaining+'...'}},1000)}else{renderDetail()}}
+function skipCurrent(){clearInterval(countdownTimer);const s=getSession(activeSessionId);if(!s)return;s.entries[s.currentIndex].status='skipped';save();const nextIdx=s.entries.findIndex((e,i)=>i>s.currentIndex&&e.status==='pending');if(nextIdx!==-1)s.currentIndex=nextIdx;else{const any=s.entries.findIndex(e=>e.status==='pending');if(any!==-1)s.currentIndex=any}save();renderDetail()}
+function saveNote(val){const s=getSession(activeSessionId);if(!s)return;s.entries[s.currentIndex].notes=val;save()}
+function exportCSV(){const s=getSession(activeSessionId);if(!s)return;let csv='Number,Label,Status,CalledAt,Notes\n';s.entries.forEach(e=>{csv+=[e.raw,e.label,e.status,e.calledAt||'',(e.notes||'').replace(/,/g,';')].join(',')+'\n'});const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=s.name.replace(/\s+/g,'_')+'.csv';a.click();URL.revokeObjectURL(url)}
+function toggleSetting(key,btn){if(key==='autoAdvance'){settings.autoAdvance=!settings.autoAdvance;btn.classList.toggle('on',settings.autoAdvance)}if(key==='haptic'){settings.haptic=!settings.haptic;btn.classList.toggle('on',settings.haptic)}saveSettings()}
+function updateDelay(val){settings.delay=parseInt(val);document.getElementById('delay-value').textContent=val+'s';saveSettings()}
+document.getElementById('toggle-auto').classList.toggle('on',settings.autoAdvance);document.getElementById('toggle-haptic').classList.toggle('on',settings.haptic);document.getElementById('delay-slider').value=settings.delay;document.getElementById('delay-value').textContent=settings.delay+'s';renderSessionList();
+</script>
+</body>
+</html>
