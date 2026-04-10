@@ -1,0 +1,22 @@
+{
+  "name": "remembrance-dialer",
+  "version": "1.0.0",
+  "description": "Universal integration hub for the Remembrance ecosystem",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "remembrance",
+    "dialer",
+    "integration",
+    "ci",
+    "notifications",
+    "llm",
+    "oracle"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
