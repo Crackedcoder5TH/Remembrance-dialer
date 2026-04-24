@@ -1,0 +1,62 @@
+name: Covenant Check (via Oracle)
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  covenant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: self
+          fetch-depth: 2
+      - uses: actions/checkout@v4
+        with:
+          repository: Crackedcoder5TH/remembrance-oracle-toolkit
+          ref: claude/audit-remembrance-ecosystem-xaaUr
+          path: oracle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install oracle deps
+        working-directory: oracle
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Run covenant + lexicon watcher on diff
+        working-directory: self
+        run: |
+          node -e "
+          const path = require('path');
+          const cov = require(path.resolve('..','oracle','src','core','covenant-checks'));
+          const watcher = require(path.resolve('..','oracle','src','core','lexicon-watcher'));
+          const fs = require('fs');
+          const { execSync } = require('child_process');
+          let files = [];
+          try {
+            files = execSync('git diff HEAD~1 HEAD --name-only', { encoding: 'utf-8' })
+              .split('\n').filter(f => /\.(js|jsx|ts|tsx|py)$/.test(f));
+          } catch { files = []; }
+          let failed = 0;
+          for (const f of files) {
+            if (!fs.existsSync(f)) continue;
+            const code = fs.readFileSync(f, 'utf-8');
+            const result = cov.runAllChecks(code, f);
+            if (!result.sealed) {
+              console.log('::warning file=' + f + '::' + JSON.stringify(result.failed));
+              if (result.severity === 'high') failed++;
+            }
+          }
+          if (failed > 0) { console.log('::error::' + failed + ' breaches'); process.exit(1); }
+          console.log('covenant: scanned ' + files.length + ' files, sealed OK');
+          const cycle = watcher.runCycle({ coherency: 0.82, ref: 'HEAD' });
+          console.log('lexicon cycle: ' + JSON.stringify(cycle));
+          "
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: covenant-report
+          path: self/.remembrance/
+          if-no-files-found: ignore
