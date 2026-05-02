@@ -1,17 +1,15 @@
 # remembrance-dialer
 
-**The Dialer — universal integration hub for the Remembrance
-ecosystem.** In covenant framing the Dialer is the *bridge* between
-the kingdom and the outside world; in plain technical terms it is one
-adapter surface for CI systems, code hosts, notifications, LLM
-providers, the Oracle, and the Void substrate. Both descriptions
-point at the same code.
+**Universal integration hub for the Remembrance ecosystem. One adapter
+surface for CI systems, code hosts, notifications, LLM providers, the
+oracle toolkit, and the void compressor.**
 
 > **A [Remembrance.LLC](#about-remembrancellc) project.**
 > **Part of the [Remembrance Ecosystem](https://github.com/Crackedcoder5TH/Void-Data-Compressor)** —
 > reference implementation of [Coherency Protocol v1.0](https://github.com/Crackedcoder5TH/Void-Data-Compressor/blob/main/COHERENCY_PROTOCOL.md).
-> **Role**: the bridge — thin adapter layer that lets every other repo talk to external services through one consistent interface.
+> **Role**: thin adapter layer that lets every other repo talk to external services through one consistent interface.
 > **Verified capabilities**: see [CAPABILITIES.md](./CAPABILITIES.md).
+> **Project intent and framing**: see [MANIFESTO.md](./MANIFESTO.md).
 
 ---
 
@@ -112,16 +110,6 @@ than throw — this keeps partial deployments running.
 
 ---
 
-## Lexicon — covenant ↔ technical translation
-
-| Covenant term | Technical equivalent |
-|---|---|
-| The Bridge / The Dialer | the integration-hub package itself |
-| Calling out | invoking an external API through an adapter |
-| Kingdom | the local ecosystem (Oracle + Void + Witness + Swarm) |
-
----
-
 ## License
 
 MIT.
@@ -137,4 +125,4 @@ neither stores nor proxies any external-service traffic.**
 
 ---
 
-*© Remembrance.LLC. MIT-licensed.*
+*© Remembrance.LLC. MIT-licensed. Project intent: see [MANIFESTO.md](./MANIFESTO.md).*
